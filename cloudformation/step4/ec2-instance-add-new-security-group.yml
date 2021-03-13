@@ -1,0 +1,36 @@
+# コマンド
+# 作成、アップデート
+# aws cloudformation deploy --stack-name ec2-instance-create --template-file ./ec2-instance-add-new-security-group.yml
+# 削除
+# aws cloudformation delete-stack --stack-name ec2-instance-create
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: Basic EC2 Instance.
+
+Resources:
+  DevEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: tf-demo
+      # 2021/03/12時点の最新 Amazon Linux2 x64
+      ImageId: ami-0f27d081df46f326c
+      InstanceType: t3.nano
+      Monitoring: true
+      SecurityGroups:
+        - default
+        - !Ref SSHSecurityGroup
+      Tags:
+        - Key: Name
+          Value: tf-demo
+
+  SSHSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: ssh-sg
+      GroupDescription: My new SSH Security Group
+      # VpcId:
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
