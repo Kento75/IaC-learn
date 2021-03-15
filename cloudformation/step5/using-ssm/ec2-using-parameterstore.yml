@@ -1,0 +1,65 @@
+# コマンド
+# 作成、アップデート
+# aws cloudformation deploy --stack-name ec2-instance-create --template-file ./ec2-using-parameterstore.yml --parameter-overrides InstanceName=tf-Dev DevKeyName=tf-demo DevInstanceType=InstanceType
+# 削除
+# aws cloudformation delete-stack --stack-name ec2-instance-create
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: Basic EC2 Instance.
+
+Parameters:
+  InstanceName:
+    Description: instance name
+    Type: String
+  DevAvailabilityZone:
+    Description: az
+    Type: String
+    Default: ap-northeast-1a
+    AllowedValues:
+      - ap-northeast-1a
+      - ap-northeast-1c
+  DevKeyName:
+    Description: ssh key name
+    Type: AWS::EC2::KeyPair::KeyName
+  DevInstanceType:
+    Description: Using EC2 Instance
+    Type: AWS::SSM::Parameter::Value<String>
+
+Resources:
+  DevEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref DevKeyName
+      # 2021/03/12時点の最新 Amazon Linux2 x64
+      ImageId: ami-0f27d081df46f326c
+      InstanceType: !Ref DevInstanceType
+      Monitoring: true
+      AvailabilityZone: !Ref DevAvailabilityZone
+      SecurityGroups:
+        - default
+        - !Ref BasicSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Ref InstanceName
+
+  BasicSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: basic-sg
+      GroupDescription: My new SSH & HTTP Security Group
+      # VpcId:
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+
+  DevElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref DevEC2Instance
+      Domain: vpc

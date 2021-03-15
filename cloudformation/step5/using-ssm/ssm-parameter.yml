@@ -1,0 +1,25 @@
+# コマンド
+# 作成、アップデート
+# aws cloudformation deploy --stack-name ssm-parameter --template-file ./ssm-parameter.yml --parameter-overrides InstanceType=t3.nano
+# 削除
+# aws cloudformation delete-stack --stack-name ssm-parameter
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: Basic EC2 Instance.
+
+Parameters:
+  InstanceType:
+    Description: instance type
+    Type: String
+    AllowedValues:
+      - t3.nano
+      - t3.micro
+
+Resources:
+  DevInstanceTypeParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: InstanceType
+      Type: String
+      Value: !Ref InstanceType
+      Description: SSM Parameter of type String.
