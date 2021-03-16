@@ -1,0 +1,36 @@
+# コマンド
+# 作成、アップデート
+# aws cloudformation deploy --stack-name ec2-instance-create --template-file ./ec2-mapping-ami.yml
+# 削除
+# aws cloudformation delete-stack --stack-name ec2-instance-create
+
+AWSTemplateFormatVersion: 2010-09-09
+
+Mappings:
+  DevRegionMap:
+    # 東京リージョン
+    ap-northeast-1:
+      HVM64: ami-0f27d081df46f326c
+      KeyName: tf-demo
+    # 大阪リージョン
+    ap-northeast-3:
+      HVM64: ami-01d3ab722655c7b7c
+      KeyName: tf-demo2
+
+Resources:
+  DevEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !FindInMap
+        - DevRegionMap
+        - !Ref 'AWS::Region'
+        - KeyName
+      ImageId: !FindInMap
+        - DevRegionMap
+        - !Ref 'AWS::Region'
+        - HVM64
+      InstanceType: t3.nano
+      Monitoring: true
+      Tags:
+        - Key: Name
+          Value: tf-demo
