@@ -1,0 +1,52 @@
+# コマンド
+# 作成、アップデート
+# aws cloudformation deploy --stack-name ec2-instance-create --template-file ./ec2-output-instanceid-cross-reference-import.yml
+# 削除
+# aws cloudformation delete-stack --stack-name ec2-instance-create
+
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  DevKeyName:
+    Description: key name
+    Type: AWS::EC2::KeyPair::KeyName
+  EnvironmentName:
+    Description: environment
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+    ConstraintDescription: must be development or production
+
+Mappings:
+  DevRegionMap:
+    # 東京リージョン
+    ap-northeast-1:
+      HVM64: ami-0f27d081df46f326c
+    # 大阪リージョン
+    ap-northeast-3:
+      HVM64: ami-01d3ab722655c7b7c
+  DevEnvironmentMap:
+    dev:
+      InstanceType: t3.nano
+    prod:
+      InstanceType: t3.micro
+
+Resources:
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref DevKeyName
+      ImageId: !FindInMap
+        - DevRegionMap
+        - !Ref 'AWS::Region'
+        - HVM64
+      InstanceType: !FindInMap
+        - DevEnvironmentMap
+        - !Ref EnvironmentName
+        - InstanceType
+      Monitoring: true
+      SecurityGroups:
+        - !ImportValue MyDevSSHGlobalSG
+      AvailabilityZone: !ImportValue MyInstanceAvailabilityZone
